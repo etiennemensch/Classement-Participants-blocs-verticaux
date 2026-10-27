@@ -23,6 +23,72 @@ function parseExcelOrText(rawText) {
 
             const validTitles = ['g', 'm', 'f', 'gf', 'mf', 'ff', 'gmi', 'mi', 'fm'];
 
+            // 1. Titre FIDE et Nom
+            let idx = 1;
+            if (validTitles.includes(tokens[idx].toLowerCase())) {
+              title = tokens[idx].toUpperCase();
+              idx++;
+            }
+            name = tokens[idx];
+
+            // 2. Récupération de l'Elo et de la Fédération (3 lettres)
+            tokens.forEach(t => {
+              if (t.match(/^\d{4}\s*[FfNn]?$/)) {
+                elo = t.replace(/[^\d]/g, '');
+              }
+              if (t.match(/^[A-Z]{3}$/) && !['FFE','PAC','IDF','EST','ARA','OCC','NAQ','PDL'].includes(t)) {
+                fed = t;
+              }
+            });
+
+            // 3. Extraction stricte : Pts (1er score) puis Tr (2e score)
+            // On isole uniquement les valeurs numériques de type score (4, 3½, 6, 6½...)
+            const scores = tokens.filter(t => t.match(/^(\d+([\.,]\d|½|\/2)?)$/))
+                                 .filter(t => parseInt(t, 10) !== rank && parseInt(t, 10) !== parseInt(elo, 10) && parseInt(t, 10) < 100);
+
+            // Dans FFE : score 0 = Pts, score 1 = Tr, score 2 = Bu
+            if (scores.length >= 1) pts = scores[0];
+            if (scores.length >= 2) tr = scores[1];
+
+            if (name) {
+              extracted.push({ rank, title, name, elo, fed, pts: pts || '0', tr: tr || '' });
+            }
+          }
+        }
+      });
+
+      if (extracted.length > 0) {
+        players = extracted.sort((a, b) => a.rank - b.rank);
+        document.getElementById('statusText').textContent = `🟢 ${players.length} joueurs`;
+        applySettings();
+      } else {
+        alert("Impossible de lire les données. Sélectionnez le tableau FFE (Ctrl+A) et collez.");
+      }
+    }function parseExcelOrText(rawText) {
+      const extracted = [];
+      const lines = rawText.split(/\r?\n/);
+
+      lines.forEach((line) => {
+        if (!line.trim()) return;
+
+        let tokens = line.split('\t').map(t => t.trim()).filter(t => t.length > 0);
+        if (tokens.length < 3) {
+          tokens = line.trim().split(/\s{2,}/);
+        }
+
+        if (tokens.length >= 4) {
+          const rank = parseInt(tokens[0], 10);
+
+          if (!isNaN(rank) && rank > 0 && rank < 1000) {
+            let title = '';
+            let name = '';
+            let elo = '2000';
+            let fed = 'FRA';
+            let pts = '';
+            let tr = '';
+
+            const validTitles = ['g', 'm', 'f', 'gf', 'mf', 'ff', 'gmi', 'mi', 'fm'];
+
             // 1. Tên và Danh hiệu
             let idx = 1;
             if (validTitles.includes(tokens[idx].toLowerCase())) {
