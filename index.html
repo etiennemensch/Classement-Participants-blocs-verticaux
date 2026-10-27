@@ -48,7 +48,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .header-logo-title {
@@ -66,7 +66,6 @@
       padding: 3px 7px;
       border-radius: 10px;
       text-transform: uppercase;
-      pointer-events: none;
     }
 
     .header-subtitle {
@@ -77,7 +76,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 4px;
     }
 
     .page-indicator {
@@ -88,32 +86,21 @@
       color: #ffffff;
     }
 
-    /* Bouton barre dédiée sous l'en-tête */
-    .config-trigger-bar {
-      background: #181512;
-      padding: 6px 12px;
-      border-bottom: 1px solid #2a2420;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .btn-open-config {
-      background: #34495e;
-      color: #fff;
+    .config-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.25);
       border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
-    }
-
-    .btn-open-config:hover {
-      background: #2c3e50;
+      justify-content: center;
+      z-index: 10;
     }
 
     .config-panel {
@@ -122,8 +109,8 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: #181512;
-      z-index: 9999;
+      background: rgba(18, 18, 18, 0.98);
+      z-index: 100;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -131,9 +118,7 @@
       overflow-y: auto;
     }
 
-    .config-panel.hidden { 
-      display: none !important; 
-    }
+    .config-panel.hidden { display: none; }
 
     .config-group {
       display: flex;
@@ -150,10 +135,10 @@
       background: #2a2a2a;
       border: 1px solid #444;
       color: white;
-      padding: 8px;
+      padding: 6px;
       border-radius: 6px;
       font-size: 11px;
-      height: 140px;
+      height: 130px;
       font-family: monospace;
     }
 
@@ -167,6 +152,16 @@
       font-size: 11px;
       cursor: pointer;
       text-transform: uppercase;
+    }
+
+    .status-bar {
+      padding: 6px 12px;
+      background: #181512;
+      font-size: 10px;
+      color: #888;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #2a2420;
     }
 
     .player-list-container {
@@ -285,6 +280,7 @@
 
   <div class="widget-container">
     <div class="header-banner">
+      <button class="config-btn" onclick="toggleConfig()">⚙️</button>
       <div class="header-title-row">
         <span class="header-logo-title">CAPECHECS</span>
         <span class="live-badge">LIVE</span>
@@ -295,33 +291,31 @@
       </div>
     </div>
 
-    <!-- Barre d'action dédiée -->
-    <div class="config-trigger-bar">
-      <button class="btn-open-config" id="mainConfigBtn">⚙️ Configurer / Importer</button>
-      <span id="totalPlayersText" style="font-size: 10px; color: #888;">0 joueur</span>
+    <div class="status-bar">
+      <span id="statusText">🟢 Prêt</span>
+      <span id="totalPlayersText">0 joueur</span>
     </div>
 
     <div class="player-list-container">
       <div class="player-list" id="playerList"></div>
     </div>
 
-    <!-- Panneau de configuration -->
     <div class="config-panel hidden" id="configPanel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-        <h3 style="color:#e67e22; font-size:14px;">CONFIGURATION</h3>
-        <button class="btn-action" style="padding: 4px 8px; background:#555;" id="closeConfigBtn">✕ FERMER</button>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>Configuration FFE / Excel</h3>
+        <button class="btn-action" style="padding: 2px 6px; background:#555;" onclick="toggleConfig()">✕</button>
       </div>
 
       <div class="config-group">
-        <label>Coller les données Excel / FFE ci-dessous :</label>
-        <textarea id="rawHtmlInput" placeholder="Sélectionnez toutes les cellules dans Excel (Ctrl+A puis Ctrl+C) et collez ici..."></textarea>
-        <button class="btn-action" id="importBtn" style="background:#27ae60; margin-top:4px;">IMPORTER LES DONNÉES</button>
+        <label>Coller les lignes copiées depuis Excel :</label>
+        <textarea id="rawHtmlInput" placeholder="Sélectionnez toutes les lignes dans Excel (Ctrl+A puis Ctrl+C) et collez ici..."></textarea>
+        <button class="btn-action" onclick="parseRawInput()" style="background:#27ae60; margin-top:4px;">IMPORTER DEPUIS EXCEL</button>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
         <div class="config-group">
           <label>Lignes / page :</label>
-          <select id="linesPerPageInput">
+          <select id="linesPerPageInput" onchange="applySettings()">
             <option value="5">5 joueurs</option>
             <option value="6">6 joueurs</option>
             <option value="7" selected>7 joueurs</option>
@@ -331,13 +325,15 @@
 
         <div class="config-group">
           <label>Rotation :</label>
-          <select id="intervalInput">
+          <select id="intervalInput" onchange="applySettings()">
             <option value="4000">4 sec</option>
             <option value="6000" selected>6 sec</option>
             <option value="8000">8 sec</option>
           </select>
         </div>
       </div>
+
+      <button class="btn-action" style="background: #34495e; margin-top:10px;" onclick="toggleConfig()">Fermer</button>
     </div>
   </div>
 
@@ -358,35 +354,32 @@
     };
 
     function toggleConfig() {
-      const panel = document.getElementById('configPanel');
-      panel.classList.toggle('hidden');
+      document.getElementById('configPanel').classList.toggle('hidden');
     }
 
-    document.getElementById('mainConfigBtn').addEventListener('click', toggleConfig);
-    document.getElementById('closeConfigBtn').addEventListener('click', toggleConfig);
-
-    document.getElementById('linesPerPageInput').addEventListener('change', applySettings);
-    document.getElementById('intervalInput').addEventListener('change', applySettings);
-
-    document.getElementById('importBtn').addEventListener('click', () => {
+    function parseRawInput() {
       const text = document.getElementById('rawHtmlInput').value;
       if (!text || text.trim().length === 0) {
-        alert("Veuillez d'abord coller les données de la FFE ou d'Excel.");
+        alert("Veuillez coller le contenu depuis Excel.");
         return;
       }
       parseExcelText(text);
       toggleConfig();
-    });
+    }
 
     function parseExcelText(rawText) {
       const extracted = [];
       const lines = rawText.split(/\r?\n/);
 
-      lines.forEach((line) => {
+      lines.forEach((line, index) => {
+        // Découpe par tabulation (copié-collé d'Excel) ou par plusieurs espaces
         const cols = line.split(/\t/);
+        
+        // Si découpe par tabulation échoue, tentative découpe par gros espaces
         const tokens = cols.length > 2 ? cols : line.trim().split(/\s{2,}/);
 
-        if (tokens.length >= 2) {
+        if (tokens.length >= 3) {
+          // Chercher le numéro de rang
           const firstToken = tokens[0].trim();
           const rank = parseInt(firstToken, 10);
 
@@ -401,24 +394,30 @@
             tokens.forEach((col, idx) => {
               const str = col.trim();
 
+              // Titre (g, m, f, gf, mf, gmi, mi)
               if (['g', 'm', 'f', 'gf', 'mf', 'gmi', 'mi', 'fm'].includes(str.toLowerCase())) {
                 title = str.toUpperCase();
               }
+              // Nom du joueur (ex: BELLAHCENE Bilel)
               else if (str.match(/^[A-Z\s\-']{2,}\s+[A-Za-z\-']+/)) {
                 name = str;
               }
+              // Elo (ex: 2529, 2444 F)
               else if (str.match(/^\d{3,4}\s*[FfNn]?$/)) {
                 elo = str.replace(/[^\d]/g, '');
               }
-              else if (str.match(/^[A-Z]{3}$/) && idx > 0) {
+              // Fédération FIDE 3 lettres (ex: IND, FRA, ESP, GER)
+              else if (str.match(/^[A-Z]{3}$/) && idx > 1) {
                 fed = str;
               }
+              // Points / départages (ex: 12, 11, 10.5, 10½, 9,5)
               else if (str.match(/^\d+([\.,]\d|½|\frac12)?$/)) {
                 if (pts === '0') pts = str;
                 else if (!tr) tr = str;
               }
             });
 
+            // Si le nom n'a pas été trouvé par Regex stricte, prendre la 2e ou 3e colonne alphabétique
             if (!name) {
               for (let i = 1; i < tokens.length; i++) {
                 const candidate = tokens[i].trim();
@@ -445,11 +444,14 @@
       });
 
       if (extracted.length > 0) {
+        // Trier strictement selon le classement d'origine (1, 2, 3...)
         extracted.sort((a, b) => a.rank - b.rank);
         players = extracted;
+
+        document.getElementById('statusText').textContent = `🟢 ${players.length} joueurs (Excel)`;
         applySettings();
       } else {
-        alert("Impossible de lire les données. Assurez-vous de sélectionner toutes les cellules dans Excel (Ctrl+A) et de les coller.");
+        alert("Impossible de lire la feuille Excel. Sélectionnez les colonnes dans Excel (ou faites Ctrl+A) et copiez-collez à nouveau.");
       }
     }
 
