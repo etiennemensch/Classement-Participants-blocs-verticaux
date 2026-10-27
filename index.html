@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAPECHECS - Overlay Classement Live</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding: 0;
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Conteneur principal calqué sur le visuel Capechecs */
+    .widget-container {
+      width: 330px;
+      height: 100vh;
+      background-color: #1e1a17;
+      border-right: 2px solid #2a2420;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+    }
+
+    /* En-tête Orange Capechecs */
+    .header-banner {
+      background: linear-gradient(135deg, #d35400, #e67e22);
+      padding: 16px 14px 12px 14px;
+      border-radius: 0 0 16px 16px;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      padding-right: 24px;
+    }
+
+    .header-logo-title {
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .live-badge {
+      background-color: #e74c3c;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      font-weight: 800;
+      color: #f39c12;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-top: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-indicator {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* Bouton de configuration */
+    .config-btn {
+      position: absolute;
+      top: 14px;
+      right: 12px;
+      background: rgba(0,0,0,0.25);
+      border: none;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: background 0.2s, transform 0.2s;
+      z-index: 10;
+    }
+
+    .config-btn:hover {
+      background: rgba(0,0,0,0.5);
+      transform: rotate(45deg);
+    }
+
+    /* Panneau de configuration */
+    .config-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(18, 18, 18, 0.97);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .config-panel.hidden {
+      display: none;
+    }
+
+    .config-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
+    }
+
+    .config-panel h3 {
+      font-size: 13px;
+      color: #e67e22;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .config-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .config-group label {
+      font-size: 11px;
+      color: #aaa;
+      font-weight: 600;
+    }
+
+    .config-group input, .config-group select, .config-group textarea {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: white;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      width: 100%;
+    }
+
+    .config-group textarea {
+      height: 80px;
+      resize: vertical;
+      font-family: monospace;
+    }
+
+    .btn-action {
+      background: #e67e22;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #d35400;
+    }
+
+    /* Barre de statut */
+    .status-bar {
+      padding: 6px 12px;
+      background: #181512;
+      font-size: 10px;
+      color: #888;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #2a2420;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      flex-shrink: 0;
+    }
+
+    .status-dot.green { background: #2ecc71; box-shadow: 0 0 6px #2ecc71; }
+    .status-dot.red { background: #e74c3c; box-shadow: 0 0 6px #e74c3c; }
+    .status-dot.orange { background: #f39c12; box-shadow: 0 0 6px #f39c12; }
+
+    #statusText {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Liste des Joueurs */
+    .player-list-container {
+      flex: 1;
+      padding: 10px 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .player-list.fade-out {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+
+    .player-card {
+      background: #25201c;
+      border-left: 3px solid #e67e22;
+      border-radius: 6px;
+      padding: 7px 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Podium Top 3 */
+    .player-card.rank-1 { border-left-color: #f1c40f; background: linear-gradient(90deg, #2c2519 0%, #25201c 100%); }
+    .player-card.rank-2 { border-left-color: #bdc3c7; background: linear-gradient(90deg, #272421 0%, #25201c 100%); }
+    .player-card.rank-3 { border-left-color: #e67e22; background: linear-gradient(90deg, #29211c 0%, #25201c 100%); }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .player-rank {
+      font-size: 11px;
+      font-weight: 800;
+      color: #999;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .player-card.rank-1 .player-rank { color: #f1c40f; }
+    .player-card.rank-2 .player-rank { color: #bdc3c7; }
+    .player-card.rank-3 .player-rank { color: #e67e22; }
+
+    .flag-icon {
+      width: 19px;
+      height: 13px;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+    }
+
+    .player-name-container {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .player-title-name {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .title-badge {
+      font-size: 8.5px;
+      font-weight: 900;
+      padding: 1px 3px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .title-g, .title-gm, .title-wg, .title-wgm { background: #f1c40f; color: #000; }
+    .title-m, .title-im, .title-wm, .title-wim { background: #e67e22; color: #fff; }
+    .title-f, .title-fm, .title-wf, .title-wfm { background: #3498db; color: #fff; }
+    .title-cm, .title-wcm { background: #9b59b6; color: #fff; }
+
+    .player-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .player-meta {
+      font-size: 9px;
+      color: #888;
+      font-weight: 600;
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-score-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+
+    .player-pts {
+      font-size: 12px;
+      font-weight: 900;
+      color: #f1c40f;
+      background: #151210;
+      padding: 3px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(241, 196, 15, 0.25);
+      line-height: 1;
+      text-shadow: 0 0 6px rgba(241, 196, 15, 0.3);
+    }
+
+    .player-tr-badge {
+      font-size: 9px;
+      color: #e67e22;
+      margin-top: 3px;
+      font-weight: 700;
+      background: rgba(230, 126, 34, 0.12);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #888;
+      font-size: 11px;
+      margin-top: 40px;
+      padding: 10px;
+      line-height: 1.5;
+    }
+
+    /* Filigrane Cavalier */
+    .watermark-knight {
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      width: 140px;
+      height: 140px;
+      opacity: 0.04;
+      pointer-events: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M19 22H5v-2h14v2zm-4-6.5l-2.5 1.5L10 15.5 8.5 17 7 15.5v-3L11 8V5h2v3l2.5 1.5L17 8l1.5 1.5L17 11l-2 1.5v3z"/></svg>');
+      background-repeat: no-repeat;
+      background-size: contain;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <!-- En-tête -->
+    <div class="header-banner">
+      <button class="config-btn" onclick="toggleConfig()" title="Configuration">⚙️</button>
+      <div class="header-title-row">
+        <span class="header-logo-title" id="tournamentTitle">CAPECHECS</span>
+        <span class="live-badge">LIVE</span>
+      </div>
+      <div class="header-subtitle">
+        <span>CLASSEMENT (PTS & TR)</span>
+        <span class="page-indicator" id="pageIndicator">1 / 1</span>
+      </div>
+    </div>
+
+    <!-- Statut -->
+    <div class="status-bar">
+      <div class="status-left">
+        <span class="status-dot green" id="statusDot"></span>
+        <span id="statusText">Initialisation...</span>
+      </div>
+      <span id="totalPlayersText">0 joueur</span>
+    </div>
+
+    <!-- Liste des Joueurs -->
+    <div class="player-list-container">
+      <div class="player-list" id="playerList">
+        <!-- Contenu dynamique -->
+      </div>
+      <div class="watermark-knight"></div>
+    </div>
+
+    <!-- Panneau de Configuration -->
+    <div class="config-panel hidden" id="configPanel">
+      <div class="config-header">
+        <h3>Configuration</h3>
+        <button class="btn-action" style="padding: 2px 8px; background:#444;" onclick="toggleConfig()">✕</button>
+      </div>
+
+      <div class="config-group">
+        <label>Titre du Tournoi :</label>
+        <input type="text" id="titleInput" value="CAPECHECS" onchange="updateTitle()">
+      </div>
+
+      <div class="config-group">
+        <label>Coller Excel, CSV ou Liste FFE :</label>
+        <textarea id="rawHtmlInput" placeholder="Copiez les colonnes d'Excel (Pl, Nom, Titre, Elo, Pts, Tr, Fed...) et collez-les ici..."></textarea>
+        <button class="btn-action" onclick="parseRawInput()" style="background:#27ae60;">Importer la Sélection Excel</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="config-group">
+          <label>Lignes / page :</label>
+          <select id="linesPerPageInput" onchange="applySettings()">
+            <option value="5">5 joueurs</option>
+            <option value="6">6 joueurs</option>
+            <option value="7" selected>7 joueurs</option>
+            <option value="8">8 joueurs</option>
+            <option value="10">10 joueurs</option>
+          </select>
+        </div>
+
+        <div class="config-group">
+          <label>Rotation :</label>
+          <select id="intervalInput" onchange="applySettings()">
+            <option value="4000">4 sec</option>
+            <option value="6000" selected>6 sec</option>
+            <option value="8000">8 sec</option>
+            <option value="10000">10 sec</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <label>Ordre de Tri :</label>
+        <select id="sortInput" onchange="applySettings()">
+          <option value="points_tr">Points + Tr (Départage Officiel)</option>
+          <option value="rank">Rang original (Excel/FFE)</option>
+          <option value="elo">Elo Décroissant</option>
+          <option value="name">Nom Alphabétique</option>
+        </select>
+      </div>
+
+      <div style="margin-top: 6px;">
+        <button class="btn-action" style="width: 100%; background: #2980b9;" onclick="useSampleData()">Charger Exemple de Test</button>
+      </div>
+
+      <div style="margin-top: 4px;">
+        <button class="btn-action" style="width: 100%; background: #34495e;" onclick="toggleConfig()">Valider & Masquer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Données d'exemple pré-chargées pour tester directement la gestion des égalités de points et départage Tr
+    const samplePlayersData = [
+      { rank: 1, name: "MAURIZZI Marc'Andria", title: "g", elo: 2624, fed: "FRA", points: 6.5, tr: 29.5 },
+      { rank: 2, name: "DONCHENKO Alexander", title: "g", elo: 2658, fed: "GER", points: 6.0, tr: 30.0 },
+      { rank: 3, name: "CORNETTE Matthieu", title: "g", elo: 2575, fed: "FRA", points: 5.5, tr: 28.5 },
+      { rank: 4, name: "DARDHA Daniel", title: "g", elo: 2605, fed: "BEL", points: 5.5, tr: 27.0 }, // Même points que 3, départagé par Tr
+      { rank: 5, name: "MARCUSSON Emil", title: "m", elo: 2430, fed: "DEN", points: 5.0, tr: 26.5 },
+      { rank: 6, name: "SOCHACKI Christophe", title: "m", elo: 2485, fed: "FRA", points: 5.0, tr: 25.0 }, // Même points que 5, départagé par Tr
+      { rank: 7, name: "GUICHARD Pauline", title: "gm", elo: 2380, fed: "FRA", points: 4.5, tr: 26.0 },
+      { rank: 8, name: "GHARIBYAN Mamikon", title: "m", elo: 2490, fed: "ARM", points: 4.5, tr: 24.5 },
+      { rank: 9, name: "BAUDUIN Etienne", title: "f", elo: 2310, fed: "FRA", points: 4.0, tr: 23.5 },
+      { rank: 10, name: "COLIN Vincent", title: "m", elo: 2395, fed: "FRA", points: 4.0, tr: 22.0 },
+      { rank: 11, name: "VERNAY Clovis", title: "g", elo: 2510, fed: "SUI", points: 4.0, tr: 21.0 },
+      { rank: 12, name: "SUMETS Andrey", title: "g", elo: 2545, fed: "UKR", points: 3.5, tr: 20.5 }
+    ];
+
+    let players = [];
+    let currentPage = 0;
+    let itemsPerPage = 7;
+    let rotationInterval = 6000;
+    let sortBy = 'points_tr';
+    let timerId = null;
+
+    // Codes pays FIDE vers codes drapeaux FlagCDN
+    const fedToFlag = {
+      'FRA': 'fr', 'ESP': 'es', 'UKR': 'ua', 'IND': 'in', 'KAZ': 'kz',
+      'BEL': 'be', 'GEO': 'ge', 'UAE': 'ae', 'TUR': 'tr', 'GER': 'de',
+      'ITA': 'it', 'ENG': 'gb', 'USA': 'us', 'ARM': 'am', 'AZE': 'az',
+      'POL': 'pl', 'NED': 'nl', 'SUI': 'ch', 'SGP': 'sg', 'SRB': 'rs',
+      'DEN': 'dk', 'CRO': 'hr', 'HUN': 'hu', 'GRE': 'gr', 'SWE': 'se'
+    };
+
+    function toggleConfig() {
+      document.getElementById('configPanel').classList.toggle('hidden');
+    }
+
+    function updateTitle() {
+      const newTitle = document.getElementById('titleInput').value.trim() || 'CAPECHECS';
+      document.getElementById('tournamentTitle').textContent = newTitle;
+    }
+
+    function useSampleData() {
+      players = [...samplePlayersData];
+      updateStatus('green', 'Données exemple chargées');
+      applySettings();
+    }
+
+    // Parser universel intelligent : gère le Copier-Coller Excel, CSV, HTML FFE ou Texte brut
+    function parseRawInput() {
+      const text = document.getElementById('rawHtmlInput').value;
+      if (!text || text.trim().length === 0) {
+        alert("Veuillez d'abord coller le contenu de votre tableau Excel.");
+        return;
+      }
+
+      const extractedPlayers = [];
+
+      // 1. Essai de découpage par lignes (format Tabulations Excel / Copier-Coller)
+      const lines = text.split('\n');
+
+      lines.forEach((line, index) => {
+        if (!line.trim()) return;
+
+        // Séparation par tabulation (Excel) ou par virgule/point-virgule (CSV)
+        let tokens = line.split(/\t|,|;/).map(t => t.trim());
+        
+        // Si la ligne n'est pas séparée par tabulation, découpage par espaces multiples
+        if (tokens.length <= 2) {
+          tokens = line.split(/\s{2,}/).map(t => t.trim());
+        }
+
+        if (tokens.length >= 3) {
+          let rank = null;
+          let name = '';
+          let title = '';
+          let elo = 1500;
+          let points = 0;
+          let tr = 0;
+          let fed = 'FRA';
+
+          tokens.forEach((token, idx) => {
+            // Rang (ex: 1, 2, 10...)
+            if (idx === 0 && token.match(/^\d{1,3}$/)) {
+              rank = parseInt(token, 10);
+            }
+
+            // Détection du Nom (ex: MAURIZZI Marc, DARDHA Daniel)
+            if (!name && token.match(/^[A-Z\s\-']{2,}\s+[A-Za-z\-']+/)) {
+              name = cleanName(token);
+            }
+
+            // Titres FIDE (g, m, f, cm, gm, im, fm...)
+            if (['g', 'm', 'f', 'cm', 'gm', 'im', 'fm', 'wg', 'wgm', 'wim', 'wfm'].includes(token.toLowerCase())) {
+              title = token.toLowerCase();
+            }
+
+            // Elo (4 chiffres)
+            if (token.match(/^\d{3,4}$/) && parseInt(token, 10) > 800) {
+              elo = parseInt(token, 10);
+            }
+
+            // Points (ex: 5.5, 5, 5.5 Pts, 5½)
+            if (token.match(/^(\d+[\.,\frac12½]|½|\d+\.\d+|\d+,\d+)$/)) {
+              let ptsVal = parseFloat(token.replace('½', '.5').replace(',', '.'));
+              if (!isNaN(ptsVal) && ptsVal <= 20) {
+                if (points === 0) {
+                  points = ptsVal;
+                } else {
+                  // Si points est déjà trouvé, le chiffre suivant est très probablement le Buchholz / Tr !
+                  tr = ptsVal;
+                }
+              }
+            }
+
+            // Code Pays / Fédération (3 lettres majuscules)
+            if (token.match(/^[A-Z]{3}$/) && idx > 1) {
+              fed = token;
+            }
+          });
+
+          // Si le nom n'a pas été capturé par regex strict, prendre la 2ème colonne textuelle
+          if (!name && tokens[1] && isNaN(tokens[1])) {
+            name = cleanName(tokens[1]);
+          }
+
+          if (name && !name.toLowerCase().includes('nom') && !name.toLowerCase().includes('joueur')) {
+            extractedPlayers.push({
+              rank: rank || (extractedPlayers.length + 1),
+              name: name,
+              title: title,
+              elo: elo,
+              fed: fed,
+              points: points,
+              tr: tr
+            });
+          }
+        }
+      });
+
+      if (extractedPlayers.length > 0) {
+        players = extractedPlayers;
+        updateStatus('green', `${players.length} joueurs importés`);
+        applySettings();
+        toggleConfig();
+      } else {
+        updateStatus('red', 'Erreur de formatage');
+        alert("Impossible d'extraire les données. Assurez-vous d'avoir sélectionné les colonnes avec Nom, Points et Tr dans Excel.");
+      }
+    }
+
+    function cleanName(str) {
+      return str.replace(/\s+/g, ' ').trim();
+    }
+
+    function applySettings() {
+      itemsPerPage = parseInt(document.getElementById('linesPerPageInput').value, 10);
+      rotationInterval = parseInt(document.getElementById('intervalInput').value, 10);
+      sortBy = document.getElementById('sortInput').value;
+
+      // Tri avec priorité au Départage Tr en cas d'égalité de points
+      if (sortBy === 'points_tr') {
+        players.sort((a, b) => (b.points - a.points) || (b.tr - a.tr) || (b.elo - a.elo));
+      } else if (sortBy === 'rank') {
+        players.sort((a, b) => a.rank - b.rank);
+      } else if (sortBy === 'elo') {
+        players.sort((a, b) => b.elo - a.elo);
+      } else if (sortBy === 'name') {
+        players.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+      }
+
+      document.getElementById('totalPlayersText').textContent = `${players.length} joueurs`;
+
+      currentPage = 0;
+      renderCurrentPage();
+      startRotation();
+    }
+
+    function renderCurrentPage() {
+      const container = document.getElementById('playerList');
+      if (players.length === 0) {
+        container.innerHTML = `<div class="empty-state">Aucun joueur importé.</div>`;
+        return;
+      }
+
+      const totalPages = Math.ceil(players.length / itemsPerPage);
+      document.getElementById('pageIndicator').textContent = `${currentPage + 1} / ${totalPages}`;
+
+      const startIndex = currentPage * itemsPerPage;
+      const pagePlayers = players.slice(startIndex, startIndex + itemsPerPage);
+
+      container.classList.add('fade-out');
+
+      setTimeout(() => {
+        container.innerHTML = '';
+
+        pagePlayers.forEach((player, idx) => {
+          const globalRank = (sortBy === 'points_tr' || sortBy === 'rank') ? (startIndex + idx + 1) : (player.rank || (startIndex + idx + 1));
+          const flagCode = fedToFlag[player.fed] || 'fr';
+          const flagUrl = `https://flagcdn.com/w40/${flagCode}.png`;
+
+          // Badge Titre FIDE
+          let titleBadge = '';
+          if (player.title) {
+            const t = player.title.toLowerCase();
+            let badgeClass = 'title-f';
+            if (t.includes('g')) badgeClass = 'title-g';
+            else if (t.includes('m')) badgeClass = 'title-m';
+            else if (t.includes('cm')) badgeClass = 'title-cm';
+            
+            titleBadge = `<span class="title-badge ${badgeClass}">${player.title.toUpperCase()}</span>`;
+          }
+
+          // Formatage des Points
+          const ptsFormatted = (player.points % 1 === 0.5) ? `${Math.floor(player.points)}½` : player.points;
+
+          // Podium
+          let rankClass = '';
+          if (globalRank === 1) rankClass = 'rank-1';
+          else if (globalRank === 2) rankClass = 'rank-2';
+          else if (globalRank === 3) rankClass = 'rank-3';
+
+          const card = document.createElement('div');
+          card.className = `player-card ${rankClass}`;
+          card.innerHTML = `
+            <div class="player-info">
+              <span class="player-rank">${globalRank}</span>
+              <img class="flag-icon" src="${flagUrl}" alt="${player.fed}" onerror="this.src='https://flagcdn.com/w40/un.png'">
+              <div class="player-name-container">
+                <div class="player-title-name">
+                  ${titleBadge}
+                  <span class="player-name">${escapeHtml(player.name)}</span>
+                </div>
+                <div class="player-meta">${player.elo} Elo</div>
+              </div>
+            </div>
+            <div class="player-score-container">
+              <span class="player-pts">${ptsFormatted} <span style="font-size:9px; font-weight:700;">pts</span></span>
+              ${player.tr > 0 ? `<span class="player-tr-badge">Tr ${player.tr}</span>` : ''}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        container.classList.remove('fade-out');
+      }, 300);
+    }
+
+    function startRotation() {
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(() => {
+        if (players.length > 0) {
+          const totalPages = Math.ceil(players.length / itemsPerPage);
+          currentPage = (currentPage + 1) % totalPages;
+          renderCurrentPage();
+        }
+      }, rotationInterval);
+    }
+
+    function updateStatus(colorClass, text) {
+      const dot = document.getElementById('statusDot');
+      dot.className = `status-dot ${colorClass}`;
+      document.getElementById('statusText').textContent = text;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    // Démarrage initial avec la liste d'exemple de test
+    window.onload = () => {
+      useSampleData();
+    };
+  </script>
+</body>
+</html>
