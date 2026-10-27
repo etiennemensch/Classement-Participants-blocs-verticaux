@@ -39,19 +39,20 @@
 
     .header-banner {
       background: linear-gradient(135deg, #d35400, #e67e22);
-      padding: 12px 14px;
+      padding: 14px;
       border-radius: 0 0 16px 16px;
+      position: relative;
     }
 
-    .header-top-row {
+    .header-title-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     .header-logo-title {
-      font-size: 19px;
+      font-size: 20px;
       font-weight: 900;
       color: #ffffff;
       text-transform: uppercase;
@@ -65,16 +66,18 @@
       padding: 3px 7px;
       border-radius: 10px;
       text-transform: uppercase;
+      pointer-events: none;
     }
 
     .header-subtitle {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
       color: #f39c12;
       text-transform: uppercase;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-top: 4px;
     }
 
     .page-indicator {
@@ -85,30 +88,33 @@
       color: #ffffff;
     }
 
-    .action-bar {
-      padding: 6px 12px;
+    /* Bouton barre dédiée sous l'en-tête */
+    .config-trigger-bar {
       background: #181512;
-      font-size: 10px;
-      color: #888;
+      padding: 6px 12px;
+      border-bottom: 1px solid #2a2420;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #2a2420;
     }
 
-    .btn-cfg {
-      background: #e67e22;
-      color: white;
+    .btn-open-config {
+      background: #34495e;
+      color: #fff;
       border: none;
-      padding: 4px 10px;
+      padding: 4px 8px;
       border-radius: 4px;
-      font-size: 11px;
-      font-weight: 800;
+      font-size: 10px;
+      font-weight: 700;
       cursor: pointer;
-      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .btn-cfg:hover { background: #d35400; }
+    .btn-open-config:hover {
+      background: #2c3e50;
+    }
 
     .config-panel {
       position: absolute;
@@ -117,7 +123,7 @@
       width: 100%;
       height: 100%;
       background: #181512;
-      z-index: 99999;
+      z-index: 9999;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -125,7 +131,9 @@
       overflow-y: auto;
     }
 
-    .config-panel.hidden { display: none !important; }
+    .config-panel.hidden { 
+      display: none !important; 
+    }
 
     .config-group {
       display: flex;
@@ -150,7 +158,7 @@
     }
 
     .btn-action {
-      background: #27ae60;
+      background: #e67e22;
       color: white;
       border: none;
       padding: 8px;
@@ -180,4 +188,349 @@
       background: #25201c;
       border-left: 3px solid #e67e22;
       border-radius: 6px;
-      padding:
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .player-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .player-rank {
+      font-size: 11px;
+      font-weight: 800;
+      color: #e67e22;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .flag-icon {
+      width: 20px;
+      height: 14px;
+      object-fit: cover;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .player-details {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .player-name-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .title-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .title-g { background: #f1c40f; color: #000; }
+    .title-m { background: #e67e22; color: #fff; }
+    .title-f { background: #3498db; color: #fff; }
+
+    .player-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-sub {
+      font-size: 9px;
+      color: #888;
+    }
+
+    .player-score {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    .pts-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: #f1c40f;
+      background: #1a1614;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .tr-badge {
+      font-size: 9px;
+      color: #e67e22;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <div class="header-banner">
+      <div class="header-title-row">
+        <span class="header-logo-title">CAPECHECS</span>
+        <span class="live-badge">LIVE</span>
+      </div>
+      <div class="header-subtitle">
+        <span>CLASSEMENT</span>
+        <span class="page-indicator" id="pageIndicator">1 / 1</span>
+      </div>
+    </div>
+
+    <!-- Barre d'action dédiée -->
+    <div class="config-trigger-bar">
+      <button class="btn-open-config" id="mainConfigBtn">⚙️ Configurer / Importer</button>
+      <span id="totalPlayersText" style="font-size: 10px; color: #888;">0 joueur</span>
+    </div>
+
+    <div class="player-list-container">
+      <div class="player-list" id="playerList"></div>
+    </div>
+
+    <!-- Panneau de configuration -->
+    <div class="config-panel hidden" id="configPanel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <h3 style="color:#e67e22; font-size:14px;">CONFIGURATION</h3>
+        <button class="btn-action" style="padding: 4px 8px; background:#555;" id="closeConfigBtn">✕ FERMER</button>
+      </div>
+
+      <div class="config-group">
+        <label>Coller les données Excel / FFE ci-dessous :</label>
+        <textarea id="rawHtmlInput" placeholder="Sélectionnez toutes les cellules dans Excel (Ctrl+A puis Ctrl+C) et collez ici..."></textarea>
+        <button class="btn-action" id="importBtn" style="background:#27ae60; margin-top:4px;">IMPORTER LES DONNÉES</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="config-group">
+          <label>Lignes / page :</label>
+          <select id="linesPerPageInput">
+            <option value="5">5 joueurs</option>
+            <option value="6">6 joueurs</option>
+            <option value="7" selected>7 joueurs</option>
+            <option value="8">8 joueurs</option>
+          </select>
+        </div>
+
+        <div class="config-group">
+          <label>Rotation :</label>
+          <select id="intervalInput">
+            <option value="4000">4 sec</option>
+            <option value="6000" selected>6 sec</option>
+            <option value="8000">8 sec</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let players = [];
+    let currentPage = 0;
+    let itemsPerPage = 7;
+    let rotationInterval = 6000;
+    let timerId = null;
+
+    const fedToFlag = {
+      'FRA': 'fr', 'ESP': 'es', 'UKR': 'ua', 'IND': 'in', 'KAZ': 'kz',
+      'BEL': 'be', 'GEO': 'ge', 'UAE': 'ae', 'TUR': 'tr', 'GER': 'de',
+      'ITA': 'it', 'ENG': 'gb', 'USA': 'us', 'ARM': 'am', 'AZE': 'az',
+      'POL': 'pl', 'NED': 'nl', 'SUI': 'ch', 'SGP': 'sg', 'SRB': 'rs',
+      'FID': 'un', 'HUN': 'hu', 'ROU': 'ro', 'CZE': 'cz', 'GRE': 'gr',
+      'ISR': 'il', 'SWE': 'se', 'NOR': 'no', 'FIN': 'fi', 'DEN': 'dk'
+    };
+
+    function toggleConfig() {
+      const panel = document.getElementById('configPanel');
+      panel.classList.toggle('hidden');
+    }
+
+    document.getElementById('mainConfigBtn').addEventListener('click', toggleConfig);
+    document.getElementById('closeConfigBtn').addEventListener('click', toggleConfig);
+
+    document.getElementById('linesPerPageInput').addEventListener('change', applySettings);
+    document.getElementById('intervalInput').addEventListener('change', applySettings);
+
+    document.getElementById('importBtn').addEventListener('click', () => {
+      const text = document.getElementById('rawHtmlInput').value;
+      if (!text || text.trim().length === 0) {
+        alert("Veuillez d'abord coller les données de la FFE ou d'Excel.");
+        return;
+      }
+      parseExcelText(text);
+      toggleConfig();
+    });
+
+    function parseExcelText(rawText) {
+      const extracted = [];
+      const lines = rawText.split(/\r?\n/);
+
+      lines.forEach((line) => {
+        const cols = line.split(/\t/);
+        const tokens = cols.length > 2 ? cols : line.trim().split(/\s{2,}/);
+
+        if (tokens.length >= 2) {
+          const firstToken = tokens[0].trim();
+          const rank = parseInt(firstToken, 10);
+
+          if (!isNaN(rank) && rank > 0 && rank < 1000) {
+            let name = '';
+            let elo = '1500';
+            let fed = 'FRA';
+            let title = '';
+            let pts = '0';
+            let tr = '';
+
+            tokens.forEach((col, idx) => {
+              const str = col.trim();
+
+              if (['g', 'm', 'f', 'gf', 'mf', 'gmi', 'mi', 'fm'].includes(str.toLowerCase())) {
+                title = str.toUpperCase();
+              }
+              else if (str.match(/^[A-Z\s\-']{2,}\s+[A-Za-z\-']+/)) {
+                name = str;
+              }
+              else if (str.match(/^\d{3,4}\s*[FfNn]?$/)) {
+                elo = str.replace(/[^\d]/g, '');
+              }
+              else if (str.match(/^[A-Z]{3}$/) && idx > 0) {
+                fed = str;
+              }
+              else if (str.match(/^\d+([\.,]\d|½|\frac12)?$/)) {
+                if (pts === '0') pts = str;
+                else if (!tr) tr = str;
+              }
+            });
+
+            if (!name) {
+              for (let i = 1; i < tokens.length; i++) {
+                const candidate = tokens[i].trim();
+                if (candidate.length > 3 && !candidate.match(/^\d+$/) && !candidate.match(/^[A-Z]{3}$/)) {
+                  name = candidate;
+                  break;
+                }
+              }
+            }
+
+            if (name) {
+              extracted.push({
+                rank: rank,
+                title: title,
+                name: name,
+                elo: elo,
+                fed: fed,
+                pts: pts,
+                tr: tr
+              });
+            }
+          }
+        }
+      });
+
+      if (extracted.length > 0) {
+        extracted.sort((a, b) => a.rank - b.rank);
+        players = extracted;
+        applySettings();
+      } else {
+        alert("Impossible de lire les données. Assurez-vous de sélectionner toutes les cellules dans Excel (Ctrl+A) et de les coller.");
+      }
+    }
+
+    function applySettings() {
+      itemsPerPage = parseInt(document.getElementById('linesPerPageInput').value, 10);
+      rotationInterval = parseInt(document.getElementById('intervalInput').value, 10);
+      document.getElementById('totalPlayersText').textContent = `${players.length} joueurs`;
+
+      currentPage = 0;
+      renderCurrentPage();
+      startRotation();
+    }
+
+    function renderCurrentPage() {
+      const container = document.getElementById('playerList');
+      if (players.length === 0) return;
+
+      const totalPages = Math.ceil(players.length / itemsPerPage);
+      document.getElementById('pageIndicator').textContent = `${currentPage + 1} / ${totalPages}`;
+
+      const startIndex = currentPage * itemsPerPage;
+      const pagePlayers = players.slice(startIndex, startIndex + itemsPerPage);
+
+      container.classList.add('fade-out');
+
+      setTimeout(() => {
+        container.innerHTML = '';
+
+        pagePlayers.forEach(player => {
+          const flagCode = fedToFlag[player.fed] || 'un';
+          const flagUrl = `https://flagcdn.com/w40/${flagCode.toLowerCase()}.png`;
+
+          let titleBadge = '';
+          if (player.title) {
+            const t = player.title.toLowerCase();
+            const badgeClass = t.includes('g') ? 'title-g' : (t.includes('m') ? 'title-m' : 'title-f');
+            titleBadge = `<span class="title-badge ${badgeClass}">${player.title}</span>`;
+          }
+
+          const card = document.createElement('div');
+          card.className = 'player-card';
+          card.innerHTML = `
+            <div class="player-left">
+              <span class="player-rank">${player.rank}</span>
+              <img class="flag-icon" src="${flagUrl}" alt="${player.fed}" onerror="this.src='https://flagcdn.com/w40/un.png'">
+              <div class="player-details">
+                <div class="player-name-row">
+                  ${titleBadge}
+                  <span class="player-name">${escapeHtml(player.name)}</span>
+                </div>
+                <span class="player-sub">${player.elo} Elo</span>
+              </div>
+            </div>
+            <div class="player-score">
+              <span class="pts-badge">${player.pts} pts</span>
+              ${player.tr ? `<span class="tr-badge">Tr ${player.tr}</span>` : ''}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        container.classList.remove('fade-out');
+      }, 300);
+    }
+
+    function startRotation() {
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(() => {
+        if (players.length > 0) {
+          const totalPages = Math.ceil(players.length / itemsPerPage);
+          currentPage = (currentPage + 1) % totalPages;
+          renderCurrentPage();
+        }
+      }, rotationInterval);
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+  </script>
+</body>
+</html>
