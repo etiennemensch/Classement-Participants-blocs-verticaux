@@ -1,18 +1,395 @@
-function parseExcelText(rawText) {
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAPECHECS - Classement Live</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .widget-container {
+      width: 330px;
+      height: 100vh;
+      background-color: #1e1a17;
+      border-right: 2px solid #2a2420;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+    }
+
+    .header-banner {
+      background: linear-gradient(135deg, #d35400, #e67e22);
+      padding: 14px;
+      border-radius: 0 0 16px 16px;
+      position: relative;
+    }
+
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      padding-right: 32px;
+    }
+
+    .header-logo-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+
+    .live-badge {
+      background-color: #e74c3c;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      font-weight: 800;
+      color: #f39c12;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-indicator {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: #ffffff;
+    }
+
+    .config-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      z-index: 1000;
+    }
+
+    .config-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .config-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(18, 18, 18, 0.98);
+      z-index: 9999;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .config-panel.hidden { display: none; }
+
+    .config-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .config-group label {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    .config-group input, .config-group select, .config-group textarea {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: white;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+
+    .config-group textarea {
+      height: 130px;
+      font-family: monospace;
+    }
+
+    .btn-action {
+      background: #e67e22;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .status-bar {
+      padding: 6px 12px;
+      background: #181512;
+      font-size: 10px;
+      color: #888;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #2a2420;
+    }
+
+    .player-list-container {
+      flex: 1;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: opacity 0.3s ease;
+    }
+
+    .player-list.fade-out { opacity: 0; }
+
+    .player-card {
+      background: #25201c;
+      border-left: 3px solid #e67e22;
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .player-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .player-rank {
+      font-size: 11px;
+      font-weight: 800;
+      color: #e67e22;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .flag-icon {
+      width: 20px;
+      height: 14px;
+      object-fit: cover;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .player-details {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .player-name-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .title-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .title-g { background: #f1c40f; color: #000; }
+    .title-m { background: #e67e22; color: #fff; }
+    .title-f { background: #3498db; color: #fff; }
+
+    .player-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-sub {
+      font-size: 9px;
+      color: #888;
+    }
+
+    .player-score {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    .pts-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: #f1c40f;
+      background: #1a1614;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .tr-badge {
+      font-size: 9px;
+      color: #e67e22;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <div class="header-banner">
+      <button class="config-btn" onclick="toggleConfig()">⚙️</button>
+      <div class="header-title-row">
+        <span class="header-logo-title">CAPECHECS</span>
+        <span class="live-badge">LIVE</span>
+      </div>
+      <div class="header-subtitle">
+        <span>CLASSEMENT</span>
+        <span class="page-indicator" id="pageIndicator">1 / 1</span>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span id="statusText">🟢 Prêt</span>
+      <span id="totalPlayersText">0 joueur</span>
+    </div>
+
+    <div class="player-list-container">
+      <div class="player-list" id="playerList"></div>
+    </div>
+
+    <div class="config-panel hidden" id="configPanel">
+      <div style="display: flex; justify-content: space-between; align- items: center;">
+        <h3>Configuration FFE / Excel</h3>
+        <button class="btn-action" style="padding: 2px 6px; background:#555;" onclick="toggleConfig()">✕</button>
+      </div>
+
+      <div class="config-group">
+        <label>Coller les lignes copiées depuis Excel :</label>
+        <textarea id="rawHtmlInput" placeholder="Sélectionnez toutes les lignes dans Excel (Ctrl+A puis Ctrl+C) et collez ici..."></textarea>
+        <button class="btn-action" onclick="parseRawInput()" style="background:#27ae60; margin-top:4px;">IMPORTER DEPUIS EXCEL</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="config-group">
+          <label>Lignes / page :</label>
+          <select id="linesPerPageInput" onchange="applySettings()">
+            <option value="5">5 joueurs</option>
+            <option value="6">6 joueurs</option>
+            <option value="7" selected>7 joueurs</option>
+            <option value="8">8 joueurs</option>
+          </select>
+        </div>
+
+        <div class="config-group">
+          <label>Rotation :</label>
+          <select id="intervalInput" onchange="applySettings()">
+            <option value="4000">4 sec</option>
+            <option value="6000" selected>6 sec</option>
+            <option value="8000">8 sec</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-action" style="background: #34495e; margin-top:10px;" onclick="toggleConfig()">Fermer</button>
+    </div>
+  </div>
+
+  <script>
+    let players = [];
+    let currentPage = 0;
+    let itemsPerPage = 7;
+    let rotationInterval = 6000;
+    let timerId = null;
+
+    const fedToFlag = {
+      'FRA': 'fr', 'ESP': 'es', 'UKR': 'ua', 'IND': 'in', 'KAZ': 'kz',
+      'BEL': 'be', 'GEO': 'ge', 'UAE': 'ae', 'TUR': 'tr', 'GER': 'de',
+      'ITA': 'it', 'ENG': 'gb', 'USA': 'us', 'ARM': 'am', 'AZE': 'az',
+      'POL': 'pl', 'NED': 'nl', 'SUI': 'ch', 'SGP': 'sg', 'SRB': 'rs',
+      'FID': 'un', 'HUN': 'hu', 'ROU': 'ro', 'CZE': 'cz', 'GRE': 'gr',
+      'ISR': 'il', 'SWE': 'se', 'NOR': 'no', 'FIN': 'fi', 'DEN': 'dk'
+    };
+
+    function toggleConfig() {
+      document.getElementById('configPanel').classList.toggle('hidden');
+    }
+
+    function parseRawInput() {
+      const text = document.getElementById('rawHtmlInput').value;
+      if (!text || text.trim().length === 0) {
+        alert("Veuillez coller le contenu depuis Excel.");
+        return;
+      }
+      parseExcelText(text);
+      toggleConfig();
+    }
+
+    function parseExcelText(rawText) {
       const extracted = [];
       const lines = rawText.split(/\r?\n/);
 
       lines.forEach((line) => {
         if (!line.trim()) return;
 
-        // Découpe par tabulation (copie d'Excel) ou par espaces multiples
+        // Découpe selon la tabulation Excel \t ou espaces multiples
         let tokens = line.split('\t').map(t => t.trim()).filter(t => t.length > 0);
         if (tokens.length < 3) {
           tokens = line.trim().split(/\s{2,}/);
         }
 
-        if (tokens.length >= 3) {
-          // La première colonne est la place / Rang (Pl)
+        if (tokens.length >= 2) {
           const rank = parseInt(tokens[0], 10);
 
           if (!isNaN(rank) && rank > 0 && rank < 1000) {
@@ -25,34 +402,27 @@ function parseExcelText(rawText) {
 
             const validTitles = ['g', 'm', 'f', 'gf', 'mf', 'ff', 'gmi', 'mi', 'fm'];
 
-            // On parcourt les colonnes après le rang
             tokens.slice(1).forEach((token) => {
               const lower = token.toLowerCase();
 
-              // Titre FIDE (g, m, f...)
+              // 1. Titre FIDE
               if (validTitles.includes(lower)) {
                 title = token.toUpperCase();
               }
-              // Fédération FIDE 3 lettres (FRA, IND, UKR, etc.)
+              // 2. Fédération FIDE (3 lettres majuscules comme IND, ESP, FRA...)
               else if (token.match(/^[A-Z]{3}$/) && token !== 'FFE' && token !== 'FID') {
                 fed = token;
               }
-              // Elo (4 chiffres, ex: 2624 F, 2528)
+              // 3. Elo (ex: 2502, 2248 F)
               else if (token.match(/^\d{3,4}\s*[FfNn]?$/)) {
                 elo = token.replace(/[^\d]/g, '');
               }
-              // Points / Tronqué (ex: 4, 3½, 3.5, 6, 6½) - Se détache du numéro de rang
-              else if (token.match(/^(\d+(\.5|½|\/2|\,\d)?)$/)) {
-                // On s'assure qu'on ne reprend pas la valeur du rang
-                if (parseInt(token, 10) !== rank || token.includes('½') || token.includes('.')) {
-                  if (!pts) {
-                    pts = token;
-                  } else if (!tr) {
-                    tr = token;
-                  }
-                }
+              // 4. Points et Départages (ex: 12, 11, 10½, 10.5, 8.5)
+              else if (token.match(/^\d+([\.,]\d|½|\frac12)?$/)) {
+                if (!pts) pts = token;
+                else if (!tr) tr = token;
               }
-              // Nom du joueur
+              // 5. Nom du joueur (contient au moins 3 lettres)
               else if (token.match(/[A-Za-zÀ-ÿ]{2,}/) && !token.match(/^\d+$/)) {
                 if (!name) name = token;
                 else name += ' ' + token;
@@ -83,3 +453,85 @@ function parseExcelText(rawText) {
         alert("Impossible de lire les données. Assurez-vous de sélectionner toutes les cellules dans Excel (Ctrl+A) et de les coller.");
       }
     }
+
+    function applySettings() {
+      itemsPerPage = parseInt(document.getElementById('linesPerPageInput').value, 10);
+      rotationInterval = parseInt(document.getElementById('intervalInput').value, 10);
+      document.getElementById('totalPlayersText').textContent = `${players.length} joueurs`;
+
+      currentPage = 0;
+      renderCurrentPage();
+      startRotation();
+    }
+
+    function renderCurrentPage() {
+      const container = document.getElementById('playerList');
+      if (players.length === 0) return;
+
+      const totalPages = Math.ceil(players.length / itemsPerPage);
+      document.getElementById('pageIndicator').textContent = `${currentPage + 1} / ${totalPages}`;
+
+      const startIndex = currentPage * itemsPerPage;
+      const pagePlayers = players.slice(startIndex, startIndex + itemsPerPage);
+
+      container.classList.add('fade-out');
+
+      setTimeout(() => {
+        container.innerHTML = '';
+
+        pagePlayers.forEach(player => {
+          const flagCode = fedToFlag[player.fed] || 'un';
+          const flagUrl = `https://flagcdn.com/w40/${flagCode.toLowerCase()}.png`;
+
+          let titleBadge = '';
+          if (player.title) {
+            const t = player.title.toLowerCase();
+            const badgeClass = t.includes('g') ? 'title-g' : (t.includes('m') ? 'title-m' : 'title-f');
+            titleBadge = `<span class="title-badge ${badgeClass}">${player.title}</span>`;
+          }
+
+          const card = document.createElement('div');
+          card.className = 'player-card';
+          card.innerHTML = `
+            <div class="player-left">
+              <span class="player-rank">${player.rank}</span>
+              <img class="flag-icon" src="${flagUrl}" alt="${player.fed}" onerror="this.src='https://flagcdn.com/w40/un.png'">
+              <div class="player-details">
+                <div class="player-name-row">
+                  ${titleBadge}
+                  <span class="player-name">${escapeHtml(player.name)}</span>
+                </div>
+                <span class="player-sub">${player.elo} Elo</span>
+              </div>
+            </div>
+            <div class="player-score">
+              <span class="pts-badge">${player.pts} pts</span>
+              ${player.tr ? `<span class="tr-badge">Tr ${player.tr}</span>` : ''}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        container.classList.remove('fade-out');
+      }, 300);
+    }
+
+    function startRotation() {
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(() => {
+        if (players.length > 0) {
+          const totalPages = Math.ceil(players.length / itemsPerPage);
+          currentPage = (currentPage + 1) % totalPages;
+          renderCurrentPage();
+        }
+      }, rotationInterval);
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+  </script>
+</body>
+</html>
