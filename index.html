@@ -37,12 +37,10 @@
       box-shadow: 4px 0 20px rgba(0,0,0,0.5);
     }
 
-    /* En-tête avec bouton Config séparé à GAUCHE */
     .header-banner {
       background: linear-gradient(135deg, #d35400, #e67e22);
       padding: 12px 14px;
       border-radius: 0 0 16px 16px;
-      position: relative;
     }
 
     .header-top-row {
@@ -67,7 +65,6 @@
       padding: 3px 7px;
       border-radius: 10px;
       text-transform: uppercase;
-      pointer-events: none;
     }
 
     .header-subtitle {
@@ -88,7 +85,6 @@
       color: #ffffff;
     }
 
-    /* Bouton d'action sous le bandeau orange */
     .action-bar {
       padding: 6px 12px;
       background: #181512;
@@ -101,19 +97,19 @@
     }
 
     .btn-cfg {
-      background: #34495e;
+      background: #e67e22;
       color: white;
       border: none;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 800;
       cursor: pointer;
+      text-transform: uppercase;
     }
 
-    .btn-cfg:hover { background: #2c3e50; }
+    .btn-cfg:hover { background: #d35400; }
 
-    /* Panneau de Configuration */
     .config-panel {
       position: absolute;
       top: 0;
@@ -149,12 +145,12 @@
       padding: 8px;
       border-radius: 6px;
       font-size: 11px;
-      height: 120px;
+      height: 140px;
       font-family: monospace;
     }
 
     .btn-action {
-      background: #e67e22;
+      background: #27ae60;
       color: white;
       border: none;
       padding: 8px;
@@ -165,7 +161,6 @@
       text-transform: uppercase;
     }
 
-    /* Liste Joueurs */
     .player-list-container {
       flex: 1;
       padding: 10px;
@@ -185,69 +180,4 @@
       background: #25201c;
       border-left: 3px solid #e67e22;
       border-radius: 6px;
-      padding: 6px 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .player-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .player-rank {
-      font-size: 11px;
-      font-weight: 800;
-      color: #e67e22;
-      min-width: 24px;
-      text-align: center;
-    }
-
-    .flag-icon {
-      width: 20px;
-      height: 14px;
-      object-fit: cover;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-
-    .player-details {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    .player-name-row {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .title-badge {
-      font-size: 9px;
-      font-weight: 800;
-      padding: 1px 4px;
-      border-radius: 3px;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-
-    .title-g { background: #f1c40f; color: #000; }
-    .title-m { background: #e67e22; color: #fff; }
-    .title-f { background: #3498db; color: #fff; }
-
-    .player-name {
-      font-size: 11px;
-      font-weight: 700;
-      color: #ffffff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .player-sub {
-      font-size: 9px;
+      padding:
