@@ -49,7 +49,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 4px;
-      padding-right: 32px;
+      padding-right: 32px; /* Dégage l'espace pour l'engrenage à droite */
     }
 
     .header-logo-title {
@@ -87,6 +87,7 @@
       color: #ffffff;
     }
 
+    /* Bouton engrenage surélevé au premier plan */
     .config-btn {
       position: absolute;
       top: 10px;
@@ -147,7 +148,7 @@
     }
 
     .config-group textarea {
-      height: 130px;
+      height: 120px;
       font-family: monospace;
     }
 
@@ -289,7 +290,7 @@
 
   <div class="widget-container">
     <div class="header-banner">
-      <button class="config-btn" onclick="toggleConfig()">⚙️</button>
+      <button class="config-btn" id="configBtn" onclick="toggleConfig()">⚙️</button>
       <div class="header-title-row">
         <span class="header-logo-title">CAPECHECS</span>
         <span class="live-badge">LIVE</span>
@@ -310,15 +311,15 @@
     </div>
 
     <div class="config-panel hidden" id="configPanel">
-      <div style="display: flex; justify-content: space-between; align- items: center;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
         <h3>Configuration FFE / Excel</h3>
         <button class="btn-action" style="padding: 2px 6px; background:#555;" onclick="toggleConfig()">✕</button>
       </div>
 
       <div class="config-group">
-        <label>Coller les lignes copiées depuis Excel :</label>
-        <textarea id="rawHtmlInput" placeholder="Sélectionnez toutes les lignes dans Excel (Ctrl+A puis Ctrl+C) et collez ici..."></textarea>
-        <button class="btn-action" onclick="parseRawInput()" style="background:#27ae60; margin-top:4px;">IMPORTER DEPUIS EXCEL</button>
+        <label>Coller les lignes copiées d'Excel / FFE :</label>
+        <textarea id="rawHtmlInput" placeholder="Faites Ctrl+A puis Ctrl+C dans Excel ou FFE et collez ici..."></textarea>
+        <button class="btn-action" onclick="parseRawInput()" style="background:#27ae60; margin-top:4px;">IMPORTER LES DONNÉES</button>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -358,8 +359,7 @@
       'BEL': 'be', 'GEO': 'ge', 'UAE': 'ae', 'TUR': 'tr', 'GER': 'de',
       'ITA': 'it', 'ENG': 'gb', 'USA': 'us', 'ARM': 'am', 'AZE': 'az',
       'POL': 'pl', 'NED': 'nl', 'SUI': 'ch', 'SGP': 'sg', 'SRB': 'rs',
-      'FID': 'un', 'HUN': 'hu', 'ROU': 'ro', 'CZE': 'cz', 'GRE': 'gr',
-      'ISR': 'il', 'SWE': 'se', 'NOR': 'no', 'FIN': 'fi', 'DEN': 'dk'
+      'FID': 'un', 'HUN': 'hu', 'ROU': 'ro', 'CZE': 'cz', 'GRE': 'gr'
     };
 
     function toggleConfig() {
@@ -369,88 +369,73 @@
     function parseRawInput() {
       const text = document.getElementById('rawHtmlInput').value;
       if (!text || text.trim().length === 0) {
-        alert("Veuillez coller le contenu depuis Excel.");
+        alert("Veuillez d'abord coller le texte.");
         return;
       }
-      parseExcelText(text);
+      parseExcelOrText(text);
       toggleConfig();
     }
 
-    function parseExcelText(rawText) {
+    function parseExcelOrText(rawText) {
       const extracted = [];
       const lines = rawText.split(/\r?\n/);
 
       lines.forEach((line) => {
-        if (!line.trim()) return;
-
-        // Découpe selon la tabulation Excel \t ou espaces multiples
-        let tokens = line.split('\t').map(t => t.trim()).filter(t => t.length > 0);
-        if (tokens.length < 3) {
-          tokens = line.trim().split(/\s{2,}/);
-        }
+        const cols = line.split(/\t/);
+        const tokens = cols.length > 2 ? cols : line.trim().split(/\s{2,}/);
 
         if (tokens.length >= 2) {
-          const rank = parseInt(tokens[0], 10);
+          const firstToken = tokens[0].trim();
+          const rank = parseInt(firstToken, 10);
 
           if (!isNaN(rank) && rank > 0 && rank < 1000) {
-            let title = '';
             let name = '';
             let elo = '2000';
             let fed = 'FRA';
+            let title = '';
             let pts = '';
             let tr = '';
 
-            const validTitles = ['g', 'm', 'f', 'gf', 'mf', 'ff', 'gmi', 'mi', 'fm'];
+            tokens.forEach((col, idx) => {
+              const str = col.trim();
 
-            tokens.slice(1).forEach((token) => {
-              const lower = token.toLowerCase();
-
-              // 1. Titre FIDE
-              if (validTitles.includes(lower)) {
-                title = token.toUpperCase();
-              }
-              // 2. Fédération FIDE (3 lettres majuscules comme IND, ESP, FRA...)
-              else if (token.match(/^[A-Z]{3}$/) && token !== 'FFE' && token !== 'FID') {
-                fed = token;
-              }
-              // 3. Elo (ex: 2502, 2248 F)
-              else if (token.match(/^\d{3,4}\s*[FfNn]?$/)) {
-                elo = token.replace(/[^\d]/g, '');
-              }
-              // 4. Points et Départages (ex: 12, 11, 10½, 10.5, 8.5)
-              else if (token.match(/^\d+([\.,]\d|½|\frac12)?$/)) {
-                if (!pts) pts = token;
-                else if (!tr) tr = token;
-              }
-              // 5. Nom du joueur (contient au moins 3 lettres)
-              else if (token.match(/[A-Za-zÀ-ÿ]{2,}/) && !token.match(/^\d+$/)) {
-                if (!name) name = token;
-                else name += ' ' + token;
+              if (['g', 'm', 'f', 'gf', 'mf', 'gmi', 'mi', 'fm'].includes(str.toLowerCase())) {
+                title = str.toUpperCase();
+              } else if (str.match(/^[A-Z\s\-']{2,}\s+[A-Za-z\-']+/)) {
+                name = str;
+              } else if (str.match(/^\d{3,4}\s*[FfNn]?$/)) {
+                elo = str.replace(/[^\d]/g, '');
+              } else if (str.match(/^[A-Z]{3}$/) && idx > 0) {
+                fed = str;
+              } else if (str.match(/^\d+([\.,]\d|½|\frac12)?$/)) {
+                if (!pts) pts = str;
+                else if (!tr) tr = str;
               }
             });
 
+            if (!name) {
+              for (let i = 1; i < tokens.length; i++) {
+                const candidate = tokens[i].trim();
+                if (candidate.length > 3 && !candidate.match(/^\d+$/) && !candidate.match(/^[A-Z]{3}$/)) {
+                  name = candidate;
+                  break;
+                }
+              }
+            }
+
             if (name) {
-              extracted.push({
-                rank: rank,
-                title: title,
-                name: name,
-                elo: elo,
-                fed: fed,
-                pts: pts || '0',
-                tr: tr || ''
-              });
+              extracted.push({ rank, title, name, elo, fed, pts, tr });
             }
           }
         }
       });
 
       if (extracted.length > 0) {
-        extracted.sort((a, b) => a.rank - b.rank);
-        players = extracted;
-        document.getElementById('statusText').textContent = `🟢 ${players.length} joueurs importés`;
+        players = extracted.sort((a, b) => a.rank - b.rank);
+        document.getElementById('statusText').textContent = `🟢 ${players.length} joueurs`;
         applySettings();
       } else {
-        alert("Impossible de lire les données. Assurez-vous de sélectionner toutes les cellules dans Excel (Ctrl+A) et de les coller.");
+        alert("Impossible de lire les données. Assurez-vous de tout sélectionner dans Excel ou FFE (Ctrl+A) et de coller.");
       }
     }
 
@@ -504,10 +489,11 @@
                 <span class="player-sub">${player.elo} Elo</span>
               </div>
             </div>
+            ${player.pts ? `
             <div class="player-score">
               <span class="pts-badge">${player.pts} pts</span>
               ${player.tr ? `<span class="tr-badge">Tr ${player.tr}</span>` : ''}
-            </div>
+            </div>` : ''}
           `;
           container.appendChild(card);
         });
