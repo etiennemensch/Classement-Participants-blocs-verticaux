@@ -49,6 +49,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 4px;
+      padding-right: 32px;
     }
 
     .header-logo-title {
@@ -88,10 +89,10 @@
 
     .config-btn {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(0,0,0,0.25);
-      border: none;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: white;
       width: 28px;
       height: 28px;
@@ -100,7 +101,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 10;
+      font-size: 14px;
+      z-index: 1000;
+    }
+
+    .config-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
     }
 
     .config-panel {
@@ -110,7 +116,7 @@
       width: 100%;
       height: 100%;
       background: rgba(18, 18, 18, 0.98);
-      z-index: 100;
+      z-index: 9999;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -131,13 +137,16 @@
       color: #aaa;
     }
 
-    .config-group textarea {
+    .config-group input, .config-group select, .config-group textarea {
       background: #2a2a2a;
       border: 1px solid #444;
       color: white;
       padding: 6px;
       border-radius: 6px;
       font-size: 11px;
+    }
+
+    .config-group textarea {
       height: 130px;
       font-family: monospace;
     }
@@ -301,7 +310,7 @@
     </div>
 
     <div class="config-panel hidden" id="configPanel">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; justify-content: space-between; align- items: center;">
         <h3>Configuration FFE / Excel</h3>
         <button class="btn-action" style="padding: 2px 6px; background:#555;" onclick="toggleConfig()">✕</button>
       </div>
@@ -371,62 +380,54 @@
       const extracted = [];
       const lines = rawText.split(/\r?\n/);
 
-      lines.forEach((line, index) => {
-        // Découpe par tabulation (copié-collé d'Excel) ou par plusieurs espaces
-        const cols = line.split(/\t/);
-        
-        // Si découpe par tabulation échoue, tentative découpe par gros espaces
-        const tokens = cols.length > 2 ? cols : line.trim().split(/\s{2,}/);
+      lines.forEach((line) => {
+        if (!line.trim()) return;
 
-        if (tokens.length >= 3) {
-          // Chercher le numéro de rang
-          const firstToken = tokens[0].trim();
-          const rank = parseInt(firstToken, 10);
+        // Découpe selon la tabulation Excel \t ou espaces multiples
+        let tokens = line.split('\t').map(t => t.trim()).filter(t => t.length > 0);
+        if (tokens.length < 3) {
+          tokens = line.trim().split(/\s{2,}/);
+        }
+
+        if (tokens.length >= 2) {
+          const rank = parseInt(tokens[0], 10);
 
           if (!isNaN(rank) && rank > 0 && rank < 1000) {
-            let name = '';
-            let elo = '1500';
-            let fed = 'FRA';
             let title = '';
-            let pts = '0';
+            let name = '';
+            let elo = '2000';
+            let fed = 'FRA';
+            let pts = '';
             let tr = '';
 
-            tokens.forEach((col, idx) => {
-              const str = col.trim();
+            const validTitles = ['g', 'm', 'f', 'gf', 'mf', 'ff', 'gmi', 'mi', 'fm'];
 
-              // Titre (g, m, f, gf, mf, gmi, mi)
-              if (['g', 'm', 'f', 'gf', 'mf', 'gmi', 'mi', 'fm'].includes(str.toLowerCase())) {
-                title = str.toUpperCase();
+            tokens.slice(1).forEach((token) => {
+              const lower = token.toLowerCase();
+
+              // 1. Titre FIDE
+              if (validTitles.includes(lower)) {
+                title = token.toUpperCase();
               }
-              // Nom du joueur (ex: BELLAHCENE Bilel)
-              else if (str.match(/^[A-Z\s\-']{2,}\s+[A-Za-z\-']+/)) {
-                name = str;
+              // 2. Fédération FIDE (3 lettres majuscules comme IND, ESP, FRA...)
+              else if (token.match(/^[A-Z]{3}$/) && token !== 'FFE' && token !== 'FID') {
+                fed = token;
               }
-              // Elo (ex: 2529, 2444 F)
-              else if (str.match(/^\d{3,4}\s*[FfNn]?$/)) {
-                elo = str.replace(/[^\d]/g, '');
+              // 3. Elo (ex: 2502, 2248 F)
+              else if (token.match(/^\d{3,4}\s*[FfNn]?$/)) {
+                elo = token.replace(/[^\d]/g, '');
               }
-              // Fédération FIDE 3 lettres (ex: IND, FRA, ESP, GER)
-              else if (str.match(/^[A-Z]{3}$/) && idx > 1) {
-                fed = str;
+              // 4. Points et Départages (ex: 12, 11, 10½, 10.5, 8.5)
+              else if (token.match(/^\d+([\.,]\d|½|\frac12)?$/)) {
+                if (!pts) pts = token;
+                else if (!tr) tr = token;
               }
-              // Points / départages (ex: 12, 11, 10.5, 10½, 9,5)
-              else if (str.match(/^\d+([\.,]\d|½|\frac12)?$/)) {
-                if (pts === '0') pts = str;
-                else if (!tr) tr = str;
+              // 5. Nom du joueur (contient au moins 3 lettres)
+              else if (token.match(/[A-Za-zÀ-ÿ]{2,}/) && !token.match(/^\d+$/)) {
+                if (!name) name = token;
+                else name += ' ' + token;
               }
             });
-
-            // Si le nom n'a pas été trouvé par Regex stricte, prendre la 2e ou 3e colonne alphabétique
-            if (!name) {
-              for (let i = 1; i < tokens.length; i++) {
-                const candidate = tokens[i].trim();
-                if (candidate.length > 3 && !candidate.match(/^\d+$/) && !candidate.match(/^[A-Z]{3}$/)) {
-                  name = candidate;
-                  break;
-                }
-              }
-            }
 
             if (name) {
               extracted.push({
@@ -435,8 +436,8 @@
                 name: name,
                 elo: elo,
                 fed: fed,
-                pts: pts,
-                tr: tr
+                pts: pts || '0',
+                tr: tr || ''
               });
             }
           }
@@ -444,14 +445,12 @@
       });
 
       if (extracted.length > 0) {
-        // Trier strictement selon le classement d'origine (1, 2, 3...)
         extracted.sort((a, b) => a.rank - b.rank);
         players = extracted;
-
-        document.getElementById('statusText').textContent = `🟢 ${players.length} joueurs (Excel)`;
+        document.getElementById('statusText').textContent = `🟢 ${players.length} joueurs importés`;
         applySettings();
       } else {
-        alert("Impossible de lire la feuille Excel. Sélectionnez les colonnes dans Excel (ou faites Ctrl+A) et copiez-collez à nouveau.");
+        alert("Impossible de lire les données. Assurez-vous de sélectionner toutes les cellules dans Excel (Ctrl+A) et de les coller.");
       }
     }
 
