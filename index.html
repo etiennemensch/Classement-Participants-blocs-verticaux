@@ -49,7 +49,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 4px;
-      padding-right: 32px; /* Dégage l'espace pour l'engrenage à droite */
+      padding-right: 32px;
     }
 
     .header-logo-title {
@@ -87,7 +87,6 @@
       color: #ffffff;
     }
 
-    /* Bouton engrenage surélevé au premier plan */
     .config-btn {
       position: absolute;
       top: 10px;
@@ -138,16 +137,13 @@
       color: #aaa;
     }
 
-    .config-group input, .config-group select, .config-group textarea {
+    .config-group textarea {
       background: #2a2a2a;
       border: 1px solid #444;
       color: white;
       padding: 6px;
       border-radius: 6px;
       font-size: 11px;
-    }
-
-    .config-group textarea {
       height: 120px;
       font-family: monospace;
     }
@@ -318,7 +314,7 @@
 
       <div class="config-group">
         <label>Coller les lignes copiées d'Excel / FFE :</label>
-        <textarea id="rawHtmlInput" placeholder="Faites Ctrl+A puis Ctrl+C dans Excel ou FFE et collez ici..."></textarea>
+        <textarea id="rawHtmlInput" placeholder="Faites Ctrl+A puis Ctrl+C dans FFE ou Excel et collez ici..."></textarea>
         <button class="btn-action" onclick="parseRawInput()" style="background:#27ae60; margin-top:4px;">IMPORTER LES DONNÉES</button>
       </div>
 
@@ -359,7 +355,8 @@
       'BEL': 'be', 'GEO': 'ge', 'UAE': 'ae', 'TUR': 'tr', 'GER': 'de',
       'ITA': 'it', 'ENG': 'gb', 'USA': 'us', 'ARM': 'am', 'AZE': 'az',
       'POL': 'pl', 'NED': 'nl', 'SUI': 'ch', 'SGP': 'sg', 'SRB': 'rs',
-      'FID': 'un', 'HUN': 'hu', 'ROU': 'ro', 'CZE': 'cz', 'GRE': 'gr'
+      'FID': 'un', 'HUN': 'hu', 'ROU': 'ro', 'CZE': 'cz', 'GRE': 'gr',
+      'ALG': 'dz', 'MAR': 'ma', 'TUN': 'tn'
     };
 
     function toggleConfig() {
@@ -381,50 +378,75 @@
       const lines = rawText.split(/\r?\n/);
 
       lines.forEach((line) => {
-        const cols = line.split(/\t/);
-        const tokens = cols.length > 2 ? cols : line.trim().split(/\s{2,}/);
+        if (!line.trim()) return;
 
-        if (tokens.length >= 2) {
-          const firstToken = tokens[0].trim();
-          const rank = parseInt(firstToken, 10);
+        let tokens = line.split('\t').map(t => t.trim()).filter(t => t.length > 0);
+        if (tokens.length < 3) {
+          tokens = line.trim().split(/\s{2,}/);
+        }
+
+        // Un tableau FFE valide comporte le Rang au début
+        if (tokens.length >= 4) {
+          const rank = parseInt(tokens[0], 10);
 
           if (!isNaN(rank) && rank > 0 && rank < 1000) {
+            let title = '';
             let name = '';
             let elo = '2000';
             let fed = 'FRA';
-            let title = '';
-            let pts = '';
+            let pts = '0';
             let tr = '';
 
-            tokens.forEach((col, idx) => {
-              const str = col.trim();
+            const validTitles = ['g', 'm', 'f', 'gf', 'mf', 'ff', 'gmi', 'mi', 'fm'];
 
-              if (['g', 'm', 'f', 'gf', 'mf', 'gmi', 'mi', 'fm'].includes(str.toLowerCase())) {
-                title = str.toUpperCase();
-              } else if (str.match(/^[A-Z\s\-']{2,}\s+[A-Za-z\-']+/)) {
-                name = str;
-              } else if (str.match(/^\d{3,4}\s*[FfNn]?$/)) {
-                elo = str.replace(/[^\d]/g, '');
-              } else if (str.match(/^[A-Z]{3}$/) && idx > 0) {
-                fed = str;
-              } else if (str.match(/^\d+([\.,]\d|½|\frac12)?$/)) {
-                if (!pts) pts = str;
-                else if (!tr) tr = str;
-              }
-            });
+            // 1. Extraction Titre et Nom au début
+            let idx = 1;
+            if (validTitles.includes(tokens[idx].toLowerCase())) {
+              title = tokens[idx].toUpperCase();
+              idx++;
+            }
+            name = tokens[idx];
+            idx++;
 
-            if (!name) {
-              for (let i = 1; i < tokens.length; i++) {
-                const candidate = tokens[i].trim();
-                if (candidate.length > 3 && !candidate.match(/^\d+$/) && !candidate.match(/^[A-Z]{3}$/)) {
-                  name = candidate;
-                  break;
-                }
+            // 2. Recherche de l'Elo
+            for (let i = idx; i < tokens.length; i++) {
+              if (tokens[i].match(/^\d{4}\s*[FfNn]?$/)) {
+                elo = tokens[i].replace(/[^\d]/g, '');
+                break;
               }
             }
 
+            // 3. Extraction par la FIN de la ligne (structure constante FFE)
+            // Dans FFE : [Pts] [Tr] [Bu] [Perf] se trouvent à la fin
+            // ex: Pts = tokens[tokens.length - 4], Tr = tokens[tokens.length - 3]
+            const len = tokens.length;
+            
+            // On repère le token Pts (ex: 4, 3½, 3.5)
+            for (let i = len - 1; i >= 2; i--) {
+              if (tokens[i].match(/^\d+([\.,]\d|½|\/2)?$/)) {
+                // Si la ligne contient une Performance Elo à la fin (>1000), les points sont plus haut
+                if (parseInt(tokens[i], 10) > 100) continue; 
+                
+                // On a trouvé les valeurs finales
+                if (!tr && pts !== '0') tr = tokens[i];
+                else if (pts === '0') pts = tokens[i];
+              }
+            }
+
+            // Correction si Pts et Tr ont été inversés
+            if (pts && tr && parseFloat(pts.replace('½','.5')) > parseFloat(tr.replace('½','.5')) && parseFloat(pts) > 10) {
+              let tmp = pts; pts = tr; tr = tmp;
+            }
+
+            // 4. Fédération FIDE (3 lettres majuscules)
+            tokens.forEach(t => {
+              if (t.match(/^[A-Z]{3}$/) && t !== 'FFE' && t !== 'PAC' && t !== 'IDF' && t !== 'EST' && t !== 'ARA' && t !== 'OCC' && t !== 'NAQ' && t !== 'PDL') {
+                fed = t;
+              }
+            });
+
             if (name) {
-              extracted.push({ rank, title, name, elo, fed, pts, tr });
+              extracted.push({ rank, title, name, elo, fed, pts: pts || '0', tr: tr || '' });
             }
           }
         }
@@ -435,7 +457,7 @@
         document.getElementById('statusText').textContent = `🟢 ${players.length} joueurs`;
         applySettings();
       } else {
-        alert("Impossible de lire les données. Assurez-vous de tout sélectionner dans Excel ou FFE (Ctrl+A) et de coller.");
+        alert("Impossible de lire les données. Sélectionnez le tableau FFE (Ctrl+A) et collez.");
       }
     }
 
@@ -489,11 +511,10 @@
                 <span class="player-sub">${player.elo} Elo</span>
               </div>
             </div>
-            ${player.pts ? `
             <div class="player-score">
               <span class="pts-badge">${player.pts} pts</span>
               ${player.tr ? `<span class="tr-badge">Tr ${player.tr}</span>` : ''}
-            </div>` : ''}
+            </div>
           `;
           container.appendChild(card);
         });
@@ -515,7 +536,7 @@
 
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        return { '&': '&amp;', '<': '&lt me;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
       });
     }
   </script>
