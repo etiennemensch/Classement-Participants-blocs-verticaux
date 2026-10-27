@@ -37,20 +37,19 @@
       box-shadow: 4px 0 20px rgba(0,0,0,0.5);
     }
 
+    /* En-tête avec disposition flex propre */
     .header-banner {
       background: linear-gradient(135deg, #d35400, #e67e22);
       padding: 14px;
       border-radius: 0 0 16px 16px;
       position: relative;
-      z-index: 10;
     }
 
     .header-title-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 4px;
-      padding-right: 30px; /* Espace pour le bouton engrenage */
+      margin-bottom: 6px;
     }
 
     .header-logo-title {
@@ -58,6 +57,12 @@
       font-weight: 900;
       color: #ffffff;
       text-transform: uppercase;
+    }
+
+    .header-right-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .live-badge {
@@ -68,6 +73,27 @@
       padding: 3px 7px;
       border-radius: 10px;
       text-transform: uppercase;
+      pointer-events: none; /* Ne bloque plus le clic */
+    }
+
+    /* Bouton Engrenage distinct */
+    .config-btn {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .config-btn:hover {
+      background: rgba(0, 0, 0, 0.7);
     }
 
     .header-subtitle {
@@ -84,4 +110,214 @@
       background: rgba(0, 0, 0, 0.3);
       padding: 2px 8px;
       border-radius: 10px;
-      font-size: 11
+      font-size: 11px;
+      color: #ffffff;
+    }
+
+    /* Panneau de configuration */
+    .config-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #181512;
+      z-index: 9999;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .config-panel.hidden { 
+      display: none !important; 
+    }
+
+    .config-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .config-group label {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    .config-group textarea {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: white;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      height: 140px;
+      font-family: monospace;
+    }
+
+    .btn-action {
+      background: #e67e22;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .status-bar {
+      padding: 6px 12px;
+      background: #181512;
+      font-size: 10px;
+      color: #888;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #2a2420;
+    }
+
+    .player-list-container {
+      flex: 1;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: opacity 0.3s ease;
+    }
+
+    .player-list.fade-out { opacity: 0; }
+
+    .player-card {
+      background: #25201c;
+      border-left: 3px solid #e67e22;
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .player-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .player-rank {
+      font-size: 11px;
+      font-weight: 800;
+      color: #e67e22;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .flag-icon {
+      width: 20px;
+      height: 14px;
+      object-fit: cover;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .player-details {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .player-name-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .title-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .title-g { background: #f1c40f; color: #000; }
+    .title-m { background: #e67e22; color: #fff; }
+    .title-f { background: #3498db; color: #fff; }
+
+    .player-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-sub {
+      font-size: 9px;
+      color: #888;
+    }
+
+    .player-score {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    .pts-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: #f1c40f;
+      background: #1a1614;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .tr-badge {
+      font-size: 9px;
+      color: #e67e22;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <div class="header-banner">
+      <div class="header-title-row">
+        <span class="header-logo-title">CAPECHECS</span>
+        <div class="header-right-badges">
+          <span class="live-badge">LIVE</span>
+          <button class="config-btn" id="mainConfigBtn" title="Configuration">⚙️</button>
+        </div>
+      </div>
+      <div class="header-subtitle">
+        <span>CLASSEMENT</span>
+        <span class="page-indicator" id="pageIndicator">1 / 1</span>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span id="statusText">🟢 Prêt</span>
+      <span id="totalPlayersText">0 joueur</span>
+    </div>
+
+    <div class="player-list-container">
+      <div class="player-list" id="playerList"></div>
+    </div>
+
+    <!-- Panneau de configuration -->
+    <div class="config-panel hidden" id="configPanel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <h3 style="color:#e67e22; font-size:14px;">CONFIGURATION</h3>
+        <button class="btn-action" style="padding: 4px 8px; background:#555;" id="closeConfigBtn">✕ FERMER
