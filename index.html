@@ -20,12 +20,11 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      /* On s'assure que le fond occupe tout l'écran */
       width: 100vw;
       height: 100vh;
     }
 
-    .widget-container {
+    .app-container {
       position: absolute;
       top: 0;
       left: 0;
@@ -39,14 +38,14 @@
       z-index: 10;
     }
 
-    .header-banner {
+    .app-header {
       background: linear-gradient(135deg, #d35400, #e67e22);
       padding: 14px;
       border-radius: 0 0 16px 16px;
       position: relative;
     }
 
-    .header-title-row {
+    .title-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -54,7 +53,7 @@
       padding-right: 32px;
     }
 
-    .header-logo-title {
+    .logo-title {
       font-size: 20px;
       font-weight: 900;
       color: #ffffff;
@@ -71,7 +70,7 @@
       text-transform: uppercase;
     }
 
-    .header-subtitle {
+    .sub-title {
       font-size: 12px;
       font-weight: 800;
       color: #f39c12;
@@ -113,7 +112,7 @@
       background: rgba(0, 0, 0, 0.5);
     }
 
-    .config-btn {
+    .settings-btn {
       position: absolute;
       top: 10px;
       right: 10px;
@@ -131,11 +130,11 @@
       z-index: 1000;
     }
 
-    .config-btn:hover {
+    .settings-btn:hover {
       background: rgba(0, 0, 0, 0.8);
     }
 
-    .config-panel {
+    .settings-panel {
       position: absolute;
       top: 0;
       left: 0;
@@ -150,20 +149,20 @@
       overflow-y: auto;
     }
 
-    .config-panel.hidden { display: none; }
+    .settings-panel.hidden { display: none; }
 
-    .config-group {
+    .settings-group {
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
 
-    .config-group label {
+    .settings-group label {
       font-size: 11px;
       color: #aaa;
     }
 
-    .config-group textarea {
+    .settings-group textarea {
       background: #2a2a2a;
       border: 1px solid #444;
       color: white;
@@ -183,4 +182,79 @@
       font-weight: 700;
       font-size: 11px;
       cursor: pointer;
-      text-
+      text-transform: uppercase;
+    }
+
+    .info-bar {
+      padding: 6px 12px;
+      background: #181512;
+      font-size: 10px;
+      color: #888;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #2a2420;
+    }
+
+    .player-list-container {
+      flex: 1;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: opacity 0.3s ease;
+    }
+
+    .player-list.fade-out { opacity: 0; }
+
+    .player-card {
+      background: #25201c;
+      border-left: 3px solid #e67e22;
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .player-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .player-rank {
+      font-size: 11px;
+      font-weight: 800;
+      color: #e67e22;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .flag-icon {
+      width: 20px;
+      height: 14px;
+      object-fit: cover;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .player-details {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .player-name-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .title-badge {
+      font-size: 9px;
